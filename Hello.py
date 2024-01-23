@@ -14,37 +14,103 @@
 
 import streamlit as st
 from streamlit.logger import get_logger
+from openai import OpenAI
+from time import sleep
 
 LOGGER = get_logger(__name__)
 
 
 def run():
     st.set_page_config(
-        page_title="Hello",
+        page_title="Knowledge Works AI",
         page_icon="👋",
     )
 
-    st.write("# Welcome to Streamlit! 👋")
+    st.write("# Welcome to Knowledge Works AI! 👋")
 
     st.sidebar.success("Select a demo above.")
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
+
+    st.image('assets/kw_small.png')
     """
-    )
+    # Knowledge Works - AI 
+    """
+
+    client = OpenAI(api_key=st.secrets["API_KEY"])
+    ASSISTANT_ID = st.secrets["ASSISTANT_ID"]
+
+    if 'start_chat' not in st.session_state:
+        st.session_state.start_chat = False
+
+    if 'thread_id' not in st.session_state:
+        st.session_state.thread_id = None
+
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+
+
+
+    #st.set_page_config(page_title="Knowledge Works demo", page_icon=":speech_balloon:")
+
+    if st.sidebar.button("Empezar Chat"):
+        st.session_state.start_chat = True
+        thread = client.beta.threads.create()
+        st.session_state.thread_id=thread.id
+
+    if st.button("Exit Chat"):
+        st.session_state.messages=[]
+        st.session_state.start_chat = False
+        st.session_state.thread_id = None
+
+    if st.session_state.start_chat == True:
+        st.session_state.start_chat = True
+        if "messages" not in st.session_state.messages:
+            st.session_state.messages = []
+        
+        for message in st.session_state.messages:
+            with st.chat_input(message["role"]):
+                st.markdown(message["content"])
+        
+        if prompt:=st.chat_input("Pregunta...?"):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            assistant = client.beta.assistants.retrieve(ASSISTANT_ID)
+
+            message = client.beta.threads.messages.create(
+                thread_id=st.session_state.thread_id,
+                role="user",
+                content=prompt,
+            )
+
+            run = client.beta.threads.runs.create(
+                thread_id=st.session_state.thread_id,
+                assistant_id=assistant.id
+            )
+
+            while (run.status != "completed"):
+                st.write(f"Esperando respuesta... {run.status}")
+                run = client.beta.threads.runs.retrieve(
+                    thread_id=st.session_state.thread_id,
+                    run_id=run.id
+                )
+                sleep(8)
+
+            messages = client.beta.threads.messages.list(
+                thread_id=st.session_state.thread_id)
+            
+            assistant_messages=[
+                message for message in messages
+                if message.run_id== run.id and message.role=="assistant"
+            ]
+            for message in assistant_messages:
+                st.session_state.messages.append({"role":"assistant", "content":message.content[0].text.value})
+                with st.chat_message("assistant"):
+                    st.markdown(message.content[0].text.value)
+    else:
+        st.write("Pinchar 'Empezar Chat' para comenzar")
+    
 
 
 if __name__ == "__main__":
