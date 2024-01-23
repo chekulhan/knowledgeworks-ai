@@ -54,6 +54,13 @@ def run():
         thread = client.beta.threads.create()
         st.session_state.thread_id=thread.id
 
+    if st.button("Empezar chat con la máquina cortadora"):
+        st.session_state.start_chat = True
+        thread = client.beta.threads.create()
+        st.session_state.thread_id=thread.id
+
+
+
     if st.button("Exit Chat"):
         st.session_state.messages=[]
         st.session_state.start_chat = False
