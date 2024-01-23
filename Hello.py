@@ -25,16 +25,9 @@ def run():
         page_title="Knowledge Works AI",
         page_icon="👋",
     )
-
+    st.image('assets/kw_small.png')
     st.write("# Welcome to Knowledge Works AI! 👋")
 
-    st.sidebar.success("Select a demo above.")
-
-
-    st.image('assets/kw_small.png')
-    """
-    # Knowledge Works - AI 
-    """
 
     client = OpenAI(api_key=st.secrets["API_KEY"])
     ASSISTANT_ID = st.secrets["ASSISTANT_ID"]
