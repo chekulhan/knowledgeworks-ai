@@ -31,7 +31,7 @@ def run():
     st.image('assets/kw_small.png')
     st.write("# Bienvenidos a Knowledge Works AI!")
     st.caption("Con nuestro Inteligencia Artificial, puedes hacer preguntas sobre nuestra máquina cortada de COMAYPA, e incluso preguntarla para generar un quiz. Por ejemplo, 'Generar 2 preguntas sobre .... y proporcionar las respuestas correctas'")
-
+    st.warning("De momento, hay un limite de 3 preguntas cada mínuto.", icon="⚠️")
 
     client = OpenAI(api_key=st.secrets["API_KEY"])
     ASSISTANT_ID = st.secrets["ASSISTANT_ID"]
