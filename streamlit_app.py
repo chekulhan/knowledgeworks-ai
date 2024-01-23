@@ -102,6 +102,11 @@ def run():
                 with st.spinner('Esperando respuesta...' + run.status):
                     sleep(10)
 
+                if run.status == "failed":
+                    st.write("Hay un error de timeout que estamos intentando resolver. Intentálo en unos minutos...")
+                    break
+
+
 
             messages = client.beta.threads.messages.list(
                 thread_id=st.session_state.thread_id)
