@@ -20,13 +20,17 @@ from time import sleep
 LOGGER = get_logger(__name__)
 
 
+
+
 def run():
     st.set_page_config(
         page_title="Knowledge Works AI",
-        page_icon="👋",
+        page_icon="assets/kw_small.png",
     )
+    st.sidebar.header("COMAYPA Demo")
     st.image('assets/kw_small.png')
-    st.write("# Welcome to Knowledge Works AI! 👋")
+    st.write("# Bienvenidos a Knowledge Works AI!")
+    st.caption("Con nuestro Inteligencia Artificial, puedes hacer preguntas sobre nuestra máquina cortada de COMAYPA, e incluso preguntarla para generar un quiz. Por ejemplo, 'Generar 2 preguntas sobre .... y proporcionar las respuestas correctas'")
 
 
     client = OpenAI(api_key=st.secrets["API_KEY"])
@@ -83,12 +87,14 @@ def run():
             )
 
             while (run.status != "completed"):
-                st.write(f"Esperando respuesta... {run.status}")
+  
                 run = client.beta.threads.runs.retrieve(
                     thread_id=st.session_state.thread_id,
                     run_id=run.id
                 )
-                sleep(8)
+                with st.spinner('Esperando respuesta...' + run.status):
+                    sleep(10)
+
 
             messages = client.beta.threads.messages.list(
                 thread_id=st.session_state.thread_id)
@@ -101,6 +107,7 @@ def run():
                 st.session_state.messages.append({"role":"assistant", "content":message.content[0].text.value})
                 with st.chat_message("assistant"):
                     st.markdown(message.content[0].text.value)
+                    
     else:
         st.write("Pinchar 'Empezar Chat' para comenzar")
     
