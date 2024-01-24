@@ -1,75 +1,42 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import streamlit as st
 from streamlit.logger import get_logger
 from openai import OpenAI
 from time import sleep
+from annotated_text import annotated_text
+
+# https://docs.streamlit.io/knowledge-base/tutorials/build-conversational-apps#build-a-chatgpt-like-app
 
 LOGGER = get_logger(__name__)
 
 
-
-
 def run():
-    st.set_page_config(
-        page_title="Knowledge Works AI",
-        page_icon="assets/kw_small.png",
-    )
-    st.image('assets/kw_small.png')
-    st.write("# Knowledge Works AI!")
-    st.caption("Con nuestro Inteligencia Artificial sobre una máquina industrial, puedes hacer preguntas sobre nuestra máquina cortada de COMAYPA, e incluso preguntarla para generar un quiz. Por ejemplo, 'Generar 2 preguntas sobre .... y proporcionar las respuestas correctas'")
-    st.warning("De momento, hay un limite de 3 preguntas cada mínuto.", icon="⚠️")
 
     client = OpenAI(api_key=st.secrets["API_KEY"])
     ASSISTANT_ID = st.secrets["ASSISTANT_ID"]
 
-    if 'start_chat' not in st.session_state:
-        st.session_state.start_chat = False
+    st.session_state.start_chat = True
+    thread = client.beta.threads.create()
+    st.session_state.thread_id=thread.id
 
     if 'thread_id' not in st.session_state:
         st.session_state.thread_id = None
 
-    if 'messages' not in st.session_state:
+    if "messages" not in st.session_state:
         st.session_state.messages = []
 
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-    if st.button("Empezar chat con la máquina cortadora"):
-        st.session_state.start_chat = True
-        thread = client.beta.threads.create()
-        st.session_state.thread_id=thread.id
+    if prompt := st.chat_input("Preguntar...?"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
 
-
-    if st.button("Exit Chat"):
-        st.session_state.messages=[]
-        st.session_state.start_chat = False
-        st.session_state.thread_id = None
-
-    if st.session_state.start_chat == True:
-        st.session_state.start_chat = True
-        if "messages" not in st.session_state.messages:
-            st.session_state.messages = []
-        
-        for message in st.session_state.messages:
-            with st.chat_input(message["role"]):
-                st.markdown(message["content"])
-        
-        if prompt:=st.chat_input("Pregunta...?"):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
 
             assistant = client.beta.assistants.retrieve(ASSISTANT_ID)
 
@@ -96,25 +63,48 @@ def run():
                 if run.status == "failed":
                     st.write("Hay un error de timeout que estamos intentando resolver. Intentálo en unos minutos...")
                     break
-
-
-
+            
+            
             messages = client.beta.threads.messages.list(
                 thread_id=st.session_state.thread_id)
             
             assistant_messages=[
                 message for message in messages
-                if message.run_id== run.id and message.role=="assistant"
+                if message.run_id==run.id and message.role=="assistant"
             ]
             for message in assistant_messages:
                 st.session_state.messages.append({"role":"assistant", "content":message.content[0].text.value})
-                with st.chat_message("assistant"):
-                    st.markdown(message.content[0].text.value)
-                    
-    else:
-        st.write("Pinchar 'Empezar chat con la máquina cortadora' para comenzar")
-    
+                message_placeholder.markdown(full_response + "▌")
+
+                full_response += (message.content[0].text.value or "")
+                message_placeholder.markdown(full_response + "▌")
+
+            message_placeholder.markdown(full_response)
+
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+                                      
+# main
+
+st.set_page_config(
+        page_title="Knowledge Works AI",
+        page_icon="assets/kw_small.png",
+    )
+st.image('assets/kw_small.png')
+st.write("# Knowledge Works AI!")
+st.caption("Con nuestro Inteligencia Artificial sobre una máquina industrial, puedes hacer preguntas sobre nuestra máquina cortadora de COMAYPA, e incluso preguntarla para generar un quiz. Por ejemplo, 'Generar 2 preguntas sobre .... y proporcionar las respuestas correctas'")
+st.caption("Limitaciones: Con este modelo, no hay soporte para imágenes")
+
+st.warning("De momento, hay un limite de 3 preguntas cada mínuto.", icon="⚠️")
+
+annotated_text(
+    "Puedes preguntarme",
+    ("sobre los procedimientos de la máquina cortadora", "Dónde estaán las bobinas?"),
+    " o otra información sobre",
+    ("la máquina cortadora", "¿Qué hay que hacer al comienzo del turno?"),
+    ". Incluso, soy capaz de generar un",
+    ("quiz con preguntas y respuestas", "Generar 2 preguntas sobre el producto terminado. Incluir las respuestas.")
+)
 
 
-if __name__ == "__main__":
-    run()
+run()
