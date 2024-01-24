@@ -14,8 +14,7 @@
 
 import streamlit as st
 from streamlit.logger import get_logger
-from openai import OpenAI
-from time import sleep
+
 
 LOGGER = get_logger(__name__)
 
@@ -27,101 +26,18 @@ def run():
         page_title="Knowledge Works AI",
         page_icon="assets/kw_small.png",
     )
-    st.sidebar.header("COMAYPA Demo")
+    
     st.image('assets/kw_small.png')
     st.write("# Bienvenidos a Knowledge Works AI!")
-    st.caption("Con nuestro Inteligencia Artificial, puedes hacer preguntas sobre nuestra máquina cortada de COMAYPA, e incluso preguntarla para generar un quiz. Por ejemplo, 'Generar 2 preguntas sobre .... y proporcionar las respuestas correctas'")
-    st.warning("De momento, hay un limite de 3 preguntas cada mínuto.", icon="⚠️")
+    st.caption("Con nuestro proyecto de Inteligencia Artificial, estamos probado diferentes funciones y limites de la IA.")
+    st.caption("Para más información, ponte en contacto con https://knowledgeworks.cl/.")
+    st.warning("Este proyecto es sólo una demonstración.", icon="⚠️")
 
-    client = OpenAI(api_key=st.secrets["API_KEY"])
-    ASSISTANT_ID = st.secrets["ASSISTANT_ID"]
-
-    if 'start_chat' not in st.session_state:
-        st.session_state.start_chat = False
-
-    if 'thread_id' not in st.session_state:
-        st.session_state.thread_id = None
-
-    if 'messages' not in st.session_state:
-        st.session_state.messages = []
+    st.write("Use Case para mostrar las capabilidades de un modelo adaptado a un contexto industríal. ")
+    if st.button("Ir a GPT basado en una máquina cortadora"):
+        st.switch_page("pages/0_GPT.py")
 
 
-
-    #st.set_page_config(page_title="Knowledge Works demo", page_icon=":speech_balloon:")
-
-    if st.sidebar.button("Empezar Chat"):
-        st.session_state.start_chat = True
-        thread = client.beta.threads.create()
-        st.session_state.thread_id=thread.id
-
-    if st.button("Empezar chat con la máquina cortadora"):
-        st.session_state.start_chat = True
-        thread = client.beta.threads.create()
-        st.session_state.thread_id=thread.id
-
-
-
-    if st.button("Exit Chat"):
-        st.session_state.messages=[]
-        st.session_state.start_chat = False
-        st.session_state.thread_id = None
-
-    if st.session_state.start_chat == True:
-        st.session_state.start_chat = True
-        if "messages" not in st.session_state.messages:
-            st.session_state.messages = []
-        
-        for message in st.session_state.messages:
-            with st.chat_input(message["role"]):
-                st.markdown(message["content"])
-        
-        if prompt:=st.chat_input("Pregunta...?"):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
-
-            assistant = client.beta.assistants.retrieve(ASSISTANT_ID)
-
-            message = client.beta.threads.messages.create(
-                thread_id=st.session_state.thread_id,
-                role="user",
-                content=prompt,
-            )
-
-            run = client.beta.threads.runs.create(
-                thread_id=st.session_state.thread_id,
-                assistant_id=assistant.id
-            )
-
-            while (run.status != "completed"):
-  
-                run = client.beta.threads.runs.retrieve(
-                    thread_id=st.session_state.thread_id,
-                    run_id=run.id
-                )
-                with st.spinner('Esperando respuesta...' + run.status):
-                    sleep(10)
-
-                if run.status == "failed":
-                    st.write("Hay un error de timeout que estamos intentando resolver. Intentálo en unos minutos...")
-                    break
-
-
-
-            messages = client.beta.threads.messages.list(
-                thread_id=st.session_state.thread_id)
-            
-            assistant_messages=[
-                message for message in messages
-                if message.run_id== run.id and message.role=="assistant"
-            ]
-            for message in assistant_messages:
-                st.session_state.messages.append({"role":"assistant", "content":message.content[0].text.value})
-                with st.chat_message("assistant"):
-                    st.markdown(message.content[0].text.value)
-                    
-    else:
-        st.write("Pinchar 'Empezar Chat' para comenzar")
     
 
 
