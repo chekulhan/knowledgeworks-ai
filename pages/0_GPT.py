@@ -61,7 +61,7 @@ def run():
                     sleep(10)
 
                 if run.status == "failed":
-                    st.write("Hay un error de timeout que estamos intentando resolver. Intentálo en unos minutos...")
+                    st.write("Hay un limite de 3 peticiones al minuto. Intentálo de nuevo en 60 segundos...")
                     break
             
             
@@ -92,18 +92,18 @@ st.set_page_config(
     )
 st.image('assets/kw_small.png')
 st.write("# Knowledge Works AI!")
-st.caption("Con nuestro Inteligencia Artificial sobre una máquina industrial, puedes hacer preguntas sobre nuestra máquina cortadora de COMAYPA, e incluso preguntarla para generar un quiz. Por ejemplo, 'Generar 2 preguntas sobre .... y proporcionar las respuestas correctas'")
+st.caption("Con nuestro Inteligencia Artificial sobre una máquina industrial, puedes hacer preguntas sobre nuestra máquina cortadora, e incluso preguntarla para generar preguntas para un examen.")
 st.caption("Limitaciones: Con este modelo, no hay soporte para imágenes")
 
 st.warning("De momento, hay un limite de 3 preguntas cada mínuto.", icon="⚠️")
 
 annotated_text(
     "Puedes preguntarme",
-    ("sobre los procedimientos de la máquina cortadora", "Dónde estaán las bobinas?"),
+    ("sobre los procedimientos de la máquina cortadora", "¿Dónde están las bobinas?"),
     " o otra información sobre",
     ("la máquina cortadora", "¿Qué hay que hacer al comienzo del turno?"),
-    ". Incluso, soy capaz de generar un",
-    ("quiz con preguntas y respuestas", "Generar 2 preguntas sobre el producto terminado. Incluir las respuestas.")
+    ".Incluso, soy capaz de generar un",
+    ("quiz con preguntas y respuestas", "Generar 2 preguntas sobre el producto terminado. Incluir respuestas.")
 )
 
 
