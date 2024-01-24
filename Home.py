@@ -14,7 +14,7 @@
 
 import streamlit as st
 from streamlit.logger import get_logger
-
+import streamlit.components.v1 as components
 
 LOGGER = get_logger(__name__)
 
@@ -38,6 +38,9 @@ def run():
         st.switch_page("pages/0_GPT.py")
 
 
+    st.write("Use Case para un chatbot sobre artículos escritos por Javier Martínez Aldanondo.")
+    if st.button("Ir al chatbot de artículos"):
+        st.switch_page("pages/1_ChatBot_Articulos.py")
     
 
 
