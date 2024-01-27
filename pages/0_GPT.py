@@ -61,7 +61,8 @@ def run():
                     sleep(10)
 
             if run.status == "failed":
-                st.write("Hay un limite de 3 peticiones al minuto. Intentálo de nuevo en 60 segundos...")
+                # si no sabe, tambien failed status
+                st.write("Puede que me has preguntado algo que no sepa, o has llegado al limite de 3 peticiones al minuto. Pregúntame algo que sepa, o intentálo de nuevo en 60 segundos...")
             else:
             
                 messages = client.beta.threads.messages.list(
