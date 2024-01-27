@@ -51,7 +51,7 @@ def run():
                 assistant_id=assistant.id
             )
 
-            while (run.status != "completed"):
+            while (run.status not in ["completed", "failed"]):
   
                 run = client.beta.threads.runs.retrieve(
                     thread_id=st.session_state.thread_id,
@@ -60,28 +60,27 @@ def run():
                 with st.spinner('Esperando respuesta...' + run.status):
                     sleep(10)
 
-                if run.status == "failed":
-                    st.write("Hay un limite de 3 peticiones al minuto. Intentálo de nuevo en 60 segundos...")
-                    break
+            if run.status == "failed":
+                st.write("Hay un limite de 3 peticiones al minuto. Intentálo de nuevo en 60 segundos...")
+            else:
             
+                messages = client.beta.threads.messages.list(
+                    thread_id=st.session_state.thread_id)
             
-            messages = client.beta.threads.messages.list(
-                thread_id=st.session_state.thread_id)
-            
-            assistant_messages=[
-                message for message in messages
-                if message.run_id==run.id and message.role=="assistant"
-            ]
-            for message in assistant_messages:
-                st.session_state.messages.append({"role":"assistant", "content":message.content[0].text.value})
-                message_placeholder.markdown(full_response + "▌")
+                assistant_messages=[
+                    message for message in messages
+                    if message.run_id==run.id and message.role=="assistant"
+                ]
+                for message in assistant_messages:
+                    st.session_state.messages.append({"role":"assistant", "content":message.content[0].text.value})
+                    message_placeholder.markdown(full_response + "▌")
 
-                full_response += (message.content[0].text.value or "")
-                message_placeholder.markdown(full_response + "▌")
+                    full_response += (message.content[0].text.value or "")
+                    message_placeholder.markdown(full_response + "▌")
 
-            message_placeholder.markdown(full_response)
+                message_placeholder.markdown(full_response)
 
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
 
                                       
 # main
